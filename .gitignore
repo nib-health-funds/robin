@@ -1,0 +1,6 @@
+.serverless
+.tern-port
+node_modules
+npm-debug.log
+.vagrant
+assume-role-output.txt

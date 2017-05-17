@@ -1,0 +1,27 @@
+service: robin 
+
+frameworkVersion: ">=1.0.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: dev
+  region: ap-southeast-2
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "ecr:*"
+      Resource: "*"
+
+functions:
+  cleanupImages:
+    handler: handler.cleanupImages
+    environment:
+      DRY_RUN: true
+      ECR_REGION: us-east-1
+      SLACK_WEBHOOK: http://slack.com
+    timeout: 45
+    events:
+      - schedule: rate(1 day)
+

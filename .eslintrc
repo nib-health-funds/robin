@@ -1,0 +1,12 @@
+{
+  "env": {
+    "node": true,
+    "es6": true,
+    "mocha": true
+  },
+  "rules": {
+    "no-console": 0,
+    "object-curly-spacing": "off"
+  },
+  "extends": "jameslnewell/node"
+}
