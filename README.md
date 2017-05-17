@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/nib-health-funds/robin.svg?branch=master)](https://travis-ci.org/nib-health-funds/robin)
 [![Dependencies](https://david-dm.org/nib-health-funds/robin.svg)](https://david-dm.org/nib-health-funds/robin)
 
-Batman's very capable side kick - deletes old ECR images keeping the red queen platform law abiding.
+Batman's very capable side kick - deletes old ECR images.
 <center><img src="images/robin.jpg"</img></center>
 
 # Why Robin?
