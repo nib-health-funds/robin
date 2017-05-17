@@ -53,3 +53,4 @@ $ npm run tail-logs
 - Add some more documentation to this readme
 - Delete all untagged images
 - Make repo names configurable via env vars
+- Make tagging convention configurable
