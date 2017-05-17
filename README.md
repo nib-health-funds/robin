@@ -1,5 +1,7 @@
 # Robin
 
+[![Build Status](https://travis-ci.org/nib-health-funds/robin.svg?branch=master)](https://travis-ci.org/nib-health-funds/robin)
+
 Batman's very capable side kick - deletes old ECR images keeping the red queen platform law abiding.
 <center><img src="images/robin.jpg"</img></center>
 
