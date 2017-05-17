@@ -25,19 +25,19 @@ Images stored in ECR incur monthly data storage charges, this means paying to st
 $ npm run lint
 ```
 
-1. Test the function
+4. Test the function
 
 ```
 $ npm test
 ```
 
-3. Deploy the function
+5. Deploy the function
 
 ```
 $ npm run deploy
 ```
 
-4. Tail cloudwatch logs
+6. Tail cloudwatch logs
 
 ```
 $ npm run tail-logs
