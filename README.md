@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/nib-health-funds/robin.svg?branch=master)](https://travis-ci.org/nib-health-funds/robin)
 [![Dependencies](https://david-dm.org/nib-health-funds/robin.svg)](https://david-dm.org/nib-health-funds/robin)
 
-Batman's very capable side kick - deletes old ECR images keeping the red queen platform law abiding.
+Batman's very capable side kick - deletes old ECR images.
 <center><img src="images/robin.jpg"</img></center>
 
 # Why Robin?
@@ -53,3 +53,4 @@ $ npm run tail-logs
 - Add some more documentation to this readme
 - Delete all untagged images
 - Make repo names configurable via env vars
+- Make tagging convention configurable
