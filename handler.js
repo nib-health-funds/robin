@@ -23,8 +23,9 @@ function postToSlack(deleted, failed) {
   return rp(options);
 }
 
-function getAllImages() {
-  const ecr = new AWS.ECR({ apiVersion: '2015-09-21', region: ecrRegion });
+const ecr = new AWS.ECR({ apiVersion: '2015-09-21', region: ecrRegion });
+
+function getAllImages(repoName) {
   const ecrRegion = process.env.ECR_REGION || 'us-east-1';
   console.log('Robin is using ECR Region: ', ecrRegion);
 
@@ -60,14 +61,12 @@ module.exports.cleanupImages = (event, context, callback) => {
   const isDryRun = process.env.DRY_RUN === 'true';
   console.log('Robin is running in dry run mode: ', isDryRun);
 
-
-
   const cutOffDate = moment().add(-30, 'd');
   console.log('Using cut off date: ', cutOffDate);
 
   const promises = repoNames.map(repoName => {
 
-    return getAllImages()
+    return getAllImages(repoName)
       .then(images => { // eslint-disable-line arrow-body-style
         return filter(images, image => (
           // filters out images that are 30 days old and don't contain the master tag
