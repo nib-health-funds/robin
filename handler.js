@@ -23,31 +23,53 @@ function postToSlack(deleted, failed) {
   return rp(options);
 }
 
+function getAllImages() {
+  const ecr = new AWS.ECR({ apiVersion: '2015-09-21', region: ecrRegion });
+  const ecrRegion = process.env.ECR_REGION || 'us-east-1';
+  console.log('Robin is using ECR Region: ', ecrRegion);
+
+  const params = {
+    registryId: registry,
+    repositoryName: repoName,
+    maxResults: 100
+  };
+
+  /**
+   * 'Follows' the result pagination in a sort of reduce method in which the results are continuely added to an array
+   */
+  function followPages(allImages, data) {
+    const combinedImages = [...allImages, ...data.imageDetails];
+    
+    if (data.nextToken) {
+      params.nextToken = data.nextToken;
+      return ecr.describeImages(params)
+        .promise()
+        .then(res => followPages(combinedImages, res));
+    }
+
+    return Promise.resolve(combinedImages);
+  }
+
+  return ecr.describeImages(params).promise().then(data => followPages([], data));
+
+}
+
 module.exports.cleanupImages = (event, context, callback) => {
   console.log('Robin is dealing out some of his own justice...');
   
   const isDryRun = process.env.DRY_RUN === 'true';
   console.log('Robin is running in dry run mode: ', isDryRun);
 
-  const ecrRegion = process.env.ECR_REGION || 'us-east-1';
-  console.log('Robin is using ECR Region: ', ecrRegion);
 
-  const ecr = new AWS.ECR({ apiVersion: '2015-09-21', region: ecrRegion });
 
   const cutOffDate = moment().add(-30, 'd');
   console.log('Using cut off date: ', cutOffDate);
 
   const promises = repoNames.map(repoName => {
-    const params = {
-      registryId: registry,
-      repositoryName: repoName,
-      maxResults: 100
-    };
 
-    return ecr.describeImages(params)
-      .promise()
+    return getAllImages()
       .then(images => { // eslint-disable-line arrow-body-style
-        return filter(images.imageDetails, image => (
+        return filter(images, image => (
           // filters out images that are 30 days old and don't contain the master tag
           moment(image.imagePushedAt).isBefore(cutOffDate)
           && !image.imageTags.find(tag => tag.indexOf('master') > -1)
