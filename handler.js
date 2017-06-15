@@ -23,10 +23,10 @@ function postToSlack(deleted, failed) {
   return rp(options);
 }
 
+const ecrRegion = process.env.ECR_REGION || 'us-east-1';
 const ecr = new AWS.ECR({ apiVersion: '2015-09-21', region: ecrRegion });
 
 function getAllImages(repoName) {
-  const ecrRegion = process.env.ECR_REGION || 'us-east-1';
   console.log('Robin is using ECR Region: ', ecrRegion);
 
   const params = {
