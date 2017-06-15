@@ -43,6 +43,7 @@ function getAllImages(repoName) {
     
     if (data.nextToken) {
       params.nextToken = data.nextToken;
+      console.log(params);
       return ecr.describeImages(params)
         .promise()
         .then(res => followPages(combinedImages, res));
