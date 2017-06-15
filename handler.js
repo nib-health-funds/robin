@@ -64,9 +64,8 @@ module.exports.cleanupImages = (event, context, callback) => {
   const cutOffDate = moment().add(-30, 'd');
   console.log('Using cut off date: ', cutOffDate);
 
-  const promises = repoNames.map(repoName => {
-
-    return getAllImages(repoName)
+  const promises = repoNames.map(repoName => (
+    getAllImages(repoName)
       .then(images => { // eslint-disable-line arrow-body-style
         return filter(images, image => (
           // filters out images that are 30 days old and don't contain the master tag
@@ -94,8 +93,8 @@ module.exports.cleanupImages = (event, context, callback) => {
         console.log('Deleted images: ', deleteData.imageIds);
         console.log('Delete failures: ', deleteData.failures);
         return postToSlack(deleteData.imageIds, deleteData.failures);
-      });
-  });
+      })
+  ));
 
   return Promise.all(promises)
     .then(() => {
