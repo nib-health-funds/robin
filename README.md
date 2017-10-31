@@ -1,3 +1,4 @@
+# THIS IS NOW OBSOLETE - REPLACED BY [AWS ECR LIFECYCLE POLICIES](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html)
 # Robin
 
 [![Build Status](https://travis-ci.org/nib-health-funds/robin.svg?branch=master)](https://travis-ci.org/nib-health-funds/robin)
