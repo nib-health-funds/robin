@@ -38,7 +38,9 @@ $ npm test
 6. Deploy the function
 
 ```
-$ npm run deploy
+# Describe REPO_NAMES at deploy time
+
+$ REPO_NAMES="test_repo,test_repo_1,test_repo_2" npm run deploy
 ```
 
 7. Tail cloudwatch logs
