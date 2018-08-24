@@ -5,11 +5,9 @@ const moment = require('moment');
 const filter = require('lodash.filter');
 
 const registry = '441581275790';
-const repoNames = [
-  'test-repo'
-];
 
 const rp = require('request-promise');
+const repoNames = process.env.REPO_NAMES.split(',');
 
 function postToSlack(deleted, failed) {
   const removedText = `${deleted === 'none' ? 0 : deleted.length} ECR images have been removed.`;
