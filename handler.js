@@ -3,11 +3,11 @@
 const AWS = require('aws-sdk');
 const moment = require('moment');
 const filter = require('lodash.filter');
-const config = require('config');
 
 const registry = '441581275790';
 
 const rp = require('request-promise');
+const repoNames = require('./config');
 
 function postToSlack(deleted, failed) {
   const removedText = `${deleted === 'none' ? 0 : deleted.length} ECR images have been removed.`;
