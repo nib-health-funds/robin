@@ -3,11 +3,9 @@
 const AWS = require('aws-sdk');
 const moment = require('moment');
 const filter = require('lodash.filter');
+const config = require('config');
 
 const registry = '441581275790';
-const repoNames = [
-  'test-repo'
-];
 
 const rp = require('request-promise');
 
