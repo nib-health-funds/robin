@@ -18,6 +18,7 @@ functions:
   cleanupImages:
     handler: handler.cleanupImages
     environment:
+      REPO_NAMES: ${env:REPO_NAMES}
       DRY_RUN: true
       ECR_REGION: us-east-1
       SLACK_WEBHOOK: http://slack.com
