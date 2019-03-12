@@ -1,4 +1,4 @@
-service: robin 
+service: robin
 
 frameworkVersion: ">=1.0.0 <2.0.0"
 
@@ -19,10 +19,10 @@ functions:
     handler: handler.cleanupImages
     environment:
       REPO_NAMES: ${env:REPO_NAMES}
-      DRY_RUN: true
-      ECR_REGION: us-east-1
-      SLACK_WEBHOOK: http://slack.com
+      AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
+      DRY_RUN: ${env:DRY_RUN, 'true'}
+      ECR_REGION: ${env:ECR_REGION, 'us-east-1'}
+      SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
     timeout: 45
     events:
       - schedule: rate(1 day)
-

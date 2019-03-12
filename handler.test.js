@@ -55,35 +55,34 @@ const desribeImagesPromise = {
 const sandbox = sinon.sandbox.create();
 const deleteStub = sandbox.stub();
 const describeImagesStub = sandbox.stub().returns(desribeImagesPromise);
-const rpStub = sandbox.stub();
 const mocks = {
   'aws-sdk': {
     ECR: function () { // eslint-disable-line
       this.batchDeleteImage = deleteStub;
       this.describeImages = describeImagesStub;
     }
-  },
-  'request-promise': rpStub
+  }
 };
 
 describe('cleanupImages', () => {
   const cleanup = proxyquire('./handler.js', mocks);
 
   beforeEach(() => {
+    process.env.REPO_NAMES = 'test-repo';
+    process.env.AWS_ACCOUNT_ID = '1234567890';
+
     sandbox.reset();
   });
 
   it('Should not remove master images', done => {
     deleteStub.returns(deletePromise);
-    process.env.DRY_RUN = false;
     cleanup.cleanupImages(null, null, () => {
       assert(describeImagesStub.called);
       assert(deleteStub.calledWith({
-        registryId: '441581275790',
+        registryId: '1234567890',
         repositoryName: 'test-repo',
         imageIds: [{ imageDigest: '4' }]
       }));
-      assert(rpStub.called);
       done();
     });
   });
@@ -94,7 +93,6 @@ describe('cleanupImages', () => {
     cleanup.cleanupImages(null, null, () => {
       assert(describeImagesStub.called);
       assert(deleteStub.notCalled);
-      assert(rpStub.called);
       done();
     });
   });
@@ -138,19 +136,18 @@ describe('cleanupImages', () => {
           this.batchDeleteImage = deleteStub;
           this.describeImages = stub;
         }
-      },
-      'request-promise': rpStub
+      }
     });
 
     process.env.DRY_RUN = false;
 
     cleanupImagesProxy.cleanupImages(null, null, () => {
       const secondCall = stub.getCall(1);
-      
+
       assert(secondCall.calledWithMatch({
-        registryId: '441581275790',
+        registryId: '1234567890',
         repositoryName: 'test-repo',
-        maxResults: 100,
+        maxResults: 500,
         nextToken: 'next-please'
       }), 'describeImages was not called with the next token for the 2nd time');
       assert(stub.callCount === 2, 'describeImages was not called 2 times');
