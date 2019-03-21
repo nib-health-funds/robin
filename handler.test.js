@@ -147,7 +147,7 @@ describe('cleanupImages', () => {
       assert(secondCall.calledWithMatch({
         registryId: '1234567890',
         repositoryName: 'test-repo',
-        maxResults: 500,
+        maxResults: 100,
         nextToken: 'next-please'
       }), 'describeImages was not called with the next token for the 2nd time');
       assert(stub.callCount === 2, 'describeImages was not called 2 times');
