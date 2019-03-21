@@ -23,7 +23,7 @@ function getAllImages(ecr, registryId, repoName) {
   const params = {
     registryId,
     repositoryName: repoName,
-    maxResults: 500
+    maxResults: 100
   };
 
   /**
