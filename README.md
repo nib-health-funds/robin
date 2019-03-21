@@ -40,7 +40,7 @@ $ npm test
 ```
 # Describe REPO_NAMES at deploy time
 
-$ REPO_NAMES="test_repo,test_repo_1,test_repo_2" npm run deploy
+$ REPO_NAMES="test_repo,test_repo_1,test_repo_2" AWS_ACCOUNT_ID=1234567890 npm run deploy
 ```
 
 7. Tail cloudwatch logs
