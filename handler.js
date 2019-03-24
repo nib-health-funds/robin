@@ -27,7 +27,7 @@ function getAllImages(ecr, registryId, repoName) {
   };
 
   return ecr.describeImages(params).promise()
-    .then(data => data.imageDetails);
+    .then(data => Promise.resolve(data.imageDetails));
 }
 
 function buildReport(isDryRun, reposNotFound, reposWithUntaggedImages, reposWithDeletedImages) {
