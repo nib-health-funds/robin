@@ -68,6 +68,7 @@ describe('cleanupImages', () => {
   const cleanup = proxyquire('./handler.js', mocks);
 
   beforeEach(() => {
+    process.env.DRY_RUN = 'true';
     process.env.REPO_NAMES = 'test-repo';
     process.env.AWS_ACCOUNT_ID = '1234567890';
 
@@ -75,6 +76,7 @@ describe('cleanupImages', () => {
   });
 
   it('Should not remove master images', done => {
+    process.env.DRY_RUN = 'false';
     deleteStub.returns(deletePromise);
     cleanup.cleanupImages(null, null, () => {
       assert(describeImagesStub.called);
@@ -89,7 +91,6 @@ describe('cleanupImages', () => {
 
   it('Should not call delete if dry run', done => {
     deleteStub.returns(deletePromise);
-    process.env.DRY_RUN = true;
     cleanup.cleanupImages(null, null, () => {
       assert(describeImagesStub.called);
       assert(deleteStub.notCalled);

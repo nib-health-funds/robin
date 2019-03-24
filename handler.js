@@ -65,7 +65,7 @@ function buildReport(isDryRun, reposNotFound, reposWithUntaggedImages, reposWith
   text += `\nRepositories with images deleted (${deletedRepoKeys.length})${dryRunText}`;
   text += '\n====================================';
   if (deletedRepoKeys.length === 0) {
-    text += 'No images deleted.';
+    text += '\nNo images deleted.';
   } else {
     deletedRepoKeys.forEach(repoName => {
       text += `\n${backticks(repoName)} (${reposWithDeletedImages[repoName].length} tags): ${reposWithDeletedImages[repoName].join(', ')}`;
@@ -144,17 +144,27 @@ module.exports.cleanupImages = (event, context, callback) => {
           return { imageDigest: image.imageDigest };
         });
 
+        if (isDryRun) {
+          return Promise.resolve({ imageIds: [], failures: [] });
+        }
+
         const deleteParams = {
           registryId: registry,
           repositoryName: repoName,
           imageIds: convertedToDelete
         };
 
-        if (isDryRun) {
-          return Promise.resolve({ imageIds: [], failures: []});
-        }
+        return ecr.batchDeleteImage(deleteParams).promise()
+          .then(data => {
+            console.log(data);
+            // if (typeof reposWithDeletedImages[repoName] === 'undefined') {
+          //   reposWithDeletedImages[repoName] = [];
+          // }
 
-        return ecr.batchDeleteImage(deleteParams).promise();
+          // image.imageTags.forEach(tag => {
+          //   reposWithDeletedImages[repoName].push(tag);
+          // });
+          });
       })
       .catch(err => {
         if (err.code === 'RepositoryNotFoundException' && reposNotFound.indexOf(repoName) === -1) {
