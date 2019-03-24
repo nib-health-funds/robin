@@ -26,24 +26,8 @@ function getAllImages(ecr, registryId, repoName) {
     maxResults: 100
   };
 
-  /**
-   * 'Follows' the result pagination in a sort of reduce method in which the results are continuely added to an array
-   */
-  function followPages(ecrSvc, allImages, data) {
-    const combinedImages = allImages.length === 0 ? [...data.imageDetails] : [...allImages, ...data.imageDetails];
-
-    if (data.nextToken) {
-      params.nextToken = data.nextToken;
-      return ecrSvc.describeImages(params)
-        .promise()
-        .then(res => followPages(ecrSvc, combinedImages, res));
-    }
-
-    return Promise.resolve(combinedImages);
-  }
-
   return ecr.describeImages(params).promise()
-    .then(data => followPages(ecr, [], data));
+    .then(data => data.imageDetails);
 }
 
 function buildReport(isDryRun, reposNotFound, reposWithUntaggedImages, reposWithDeletedImages) {
@@ -77,10 +61,12 @@ function buildReport(isDryRun, reposNotFound, reposWithUntaggedImages, reposWith
     });
   }
 
-  if (deletedRepoKeys.length !== 0) {
-    text += '\n\n\n====================================';
-    text += `\nRepositories with images deleted (${deletedRepoKeys.length})${dryRunText}`;
-    text += '\n====================================';
+  text += '\n\n\n====================================';
+  text += `\nRepositories with images deleted (${deletedRepoKeys.length})${dryRunText}`;
+  text += '\n====================================';
+  if (deletedRepoKeys.length === 0) {
+    text += 'No images deleted.';
+  } else {
     deletedRepoKeys.forEach(repoName => {
       text += `\n${backticks(repoName)} (${reposWithDeletedImages[repoName].length} tags): ${reposWithDeletedImages[repoName].join(', ')}`;
     });
