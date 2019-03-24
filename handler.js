@@ -30,12 +30,27 @@ function getAllImages(ecr, registryId, repoName) {
     .then(data => Promise.resolve(data.imageDetails));
 }
 
-function buildReport(isDryRun, reposNotFound, reposWithUntaggedImages, reposWithDeletedImages) {
+function buildReport(
+  isDryRun,
+  reposNotFound,
+  reposWithUntaggedImages,
+  reposWithDeletedImagesDryRun,
+  reposWithDeletedImages,
+  reposWithImagesThatFailedToDelete
+) {
   const untaggedRepoKeys = Object.keys(reposWithUntaggedImages);
+  const deletedDryRunRepoKeys = Object.keys(reposWithDeletedImagesDryRun);
   const deletedRepoKeys = Object.keys(reposWithDeletedImages);
+  const failedToDeletedRepoKeys = Object.keys(reposWithImagesThatFailedToDelete);
 
-  if (reposNotFound.length === 0 && untaggedRepoKeys.length === 0 && deletedRepoKeys.length === 0) {
-    return Promise.resolve('Robin ran but there was no vigilamnte justice was needed');
+  if (
+    reposNotFound.length === 0
+    && untaggedRepoKeys.length === 0
+    && deletedDryRunRepoKeys === 0
+    && deletedRepoKeys.length === 0
+    && failedToDeletedRepoKeys === 0
+  ) {
+    return 'Robin ran but there no vigilamnte justice was needed';
   }
 
   const backticks = str => (`\`${str}\``);
@@ -44,33 +59,58 @@ function buildReport(isDryRun, reposNotFound, reposWithUntaggedImages, reposWith
   let text = 'Robin has attempted to clean up the streets!';
 
   if (reposNotFound.length !== 0) {
-    text += '\n\n\n====================================';
+    text += '\n\n\n===================================================';
     text += `\nRepositories not found (${reposNotFound.length})${dryRunText}`;
-    text += '\n====================================';
+    text += '\n===================================================';
     reposNotFound.forEach(repoName => {
       text += `\n${backticks(repoName)}`;
     });
   }
 
   if (untaggedRepoKeys.length !== 0) {
-    text += '\n\n\n====================================';
+    text += '\n\n\n===================================================';
     text += `\nRepositories with untagged images (${untaggedRepoKeys.length})${dryRunText}`;
-    text += '\n====================================';
+    text += '\n===================================================';
     untaggedRepoKeys.forEach(repoName => {
       text += `\n${backticks(repoName)} - ${reposWithUntaggedImages[repoName]} image${reposWithUntaggedImages[repoName] > 1 ? 's' : ''}`;
     });
   }
 
-  text += '\n\n\n====================================';
-  text += `\nRepositories with images deleted (${deletedRepoKeys.length})${dryRunText}`;
-  text += '\n====================================';
-  if (deletedRepoKeys.length === 0) {
-    text += '\nNo images deleted.';
+  if (isDryRun) {
+    text += '\n\n\n===================================================';
+    text += `\nRepositories with images deleted (${deletedDryRunRepoKeys.length})${dryRunText}`;
+    text += '\n===================================================';
+    if (deletedDryRunRepoKeys.length === 0) {
+      text += '\nNo images deleted';
+    } else {
+      deletedDryRunRepoKeys.forEach(repoName => {
+        // eslint-disable-next-line max-len
+        text += `\n${backticks(repoName)} (${reposWithDeletedImagesDryRun[repoName].length} tags): ${reposWithDeletedImagesDryRun[repoName].join(', ')}`;
+      });
+    }
   } else {
-    deletedRepoKeys.forEach(repoName => {
-      text += `\n${backticks(repoName)} (${reposWithDeletedImages[repoName].length} tags): ${reposWithDeletedImages[repoName].join(', ')}`;
-    });
+    text += '\n\n\n===================================================';
+    text += `\nRepositories with images deleted (${deletedRepoKeys.length})`;
+    text += '\n===================================================';
+    if (deletedRepoKeys.length === 0) {
+      text += '\nNo images deleted';
+    } else {
+      deletedRepoKeys.forEach(repoName => {
+        text += `\n${backticks(repoName)} (${reposWithDeletedImages[repoName].length} tags): ${reposWithDeletedImages[repoName].join(', ')}`;
+      });
+    }
+
+    if (failedToDeletedRepoKeys.length !== 0) {
+      text += '\n\n\n===================================================';
+      text += `\nRepositories with images that failed deleted (${failedToDeletedRepoKeys.length})`;
+      text += '\n===================================================';
+      deletedRepoKeys.forEach(repoName => {
+        // eslint-disable-next-line max-len
+        text += `\n${backticks(repoName)} (${reposWithImagesThatFailedToDelete[repoName].length} tags): ${reposWithImagesThatFailedToDelete[repoName].join(', ')}`;
+      });
+    }
   }
+
 
   return text;
 }
@@ -93,6 +133,8 @@ module.exports.cleanupImages = (event, context, callback) => {
   const reposNotFound = [];
   const reposWithUntaggedImages = {};
   const reposWithDeletedImages = {};
+  const reposWithDeletedImagesDryRun = {};
+  const reposWithImagesThatFailedToDelete = {};
 
   console.log('Robin is dealing out some of his own justice...');
   console.log('Robin is using ECR Region: ', ecrRegion);
@@ -133,13 +175,14 @@ module.exports.cleanupImages = (event, context, callback) => {
         console.log('Images to delete: ', toDelete);
 
         const convertedToDelete = toDelete.map(image => {
-          if (typeof reposWithDeletedImages[repoName] === 'undefined') {
-            reposWithDeletedImages[repoName] = [];
+          if (isDryRun) {
+            image.imageTags.forEach(tag => {
+              if (typeof reposWithDeletedImagesDryRun[repoName] === 'undefined') {
+                reposWithDeletedImagesDryRun[repoName] = [];
+              }
+              reposWithDeletedImagesDryRun[repoName].push(tag);
+            });
           }
-
-          image.imageTags.forEach(tag => {
-            reposWithDeletedImages[repoName].push(tag);
-          });
 
           return { imageDigest: image.imageDigest };
         });
@@ -155,15 +198,23 @@ module.exports.cleanupImages = (event, context, callback) => {
         };
 
         return ecr.batchDeleteImage(deleteParams).promise()
-          .then(data => {
-            console.log(data);
-            // if (typeof reposWithDeletedImages[repoName] === 'undefined') {
-          //   reposWithDeletedImages[repoName] = [];
-          // }
+          .then(({ failures, imageIds }) => {
+            console.log('failures: ', failures);
+            console.log('imageIds: ', imageIds);
 
-          // image.imageTags.forEach(tag => {
-          //   reposWithDeletedImages[repoName].push(tag);
-          // });
+            failures.forEach(({ imageId }) => {
+              if (typeof reposWithImagesThatFailedToDelete[repoName] === 'undefined') {
+                reposWithImagesThatFailedToDelete[repoName] = [];
+              }
+              reposWithImagesThatFailedToDelete[repoName].push(imageId.imageTag);
+            });
+
+            imageIds.forEach(({ imageTag }) => {
+              if (typeof reposWithDeletedImages[repoName] === 'undefined') {
+                reposWithDeletedImages[repoName] = [];
+              }
+              reposWithDeletedImages[repoName].push(imageTag);
+            });
           });
       })
       .catch(err => {
@@ -177,7 +228,14 @@ module.exports.cleanupImages = (event, context, callback) => {
 
   return Promise.all(promises)
     .then(() => {
-      const reportText = buildReport(isDryRun, reposNotFound, reposWithUntaggedImages, reposWithDeletedImages);
+      const reportText = buildReport(
+        isDryRun,
+        reposNotFound,
+        reposWithUntaggedImages,
+        reposWithDeletedImagesDryRun,
+        reposWithDeletedImages,
+        reposWithImagesThatFailedToDelete
+      );
 
       // Log Results
       console.log(reportText.replace(/`/g, '')); // strip backticks when logging to CloudWatch (backticks are for Slack!)
