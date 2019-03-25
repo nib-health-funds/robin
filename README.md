@@ -1,21 +1,27 @@
-# THIS IS NOW OBSOLETE - REPLACED BY [AWS ECR LIFECYCLE POLICIES](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html)
 # Robin
+
+Note that [ECR Lifecycle Policies](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html) may be a better fit for you use case.
 
 [![Build Status](https://travis-ci.org/nib-health-funds/robin.svg?branch=master)](https://travis-ci.org/nib-health-funds/robin)
 [![Dependencies](https://david-dm.org/nib-health-funds/robin.svg)](https://david-dm.org/nib-health-funds/robin)
 
 Batman's very capable side kick - deletes old ECR images.
-<center><img src="images/robin.jpg"</img></center>
+<center><img src="images/robin.jpg"></center>
 
-# Why Robin?
+## Why Robin?
 
 Images stored in ECR incur monthly data storage charges, this means paying to store old images that are no longer in use. Also, AWS ECR has a default limit of 1000 images. Therefore, it is desirable to ensure the ECR repositories are kept clean of unused images.
 
-# What we delete currently:
+## What we delete currently:
 
-- Images older than 30 days that do not have tags that contain 'master'
+Per Lambda invocation:
 
-# Usage
+- 100 images that are older than 30 days and that do not have tags that contain 'master'
+
+If you need to delete more than 100 images, rather than complicating this script so that it can paginate
+through all pages of images, we suggest you simply run the lambda multiple times.
+
+## Usage
 
 1. Authenticate and get AWS credentials via your preferred CLI, you may need to export the environment variables directly
 
@@ -50,10 +56,9 @@ $ npm run tail-logs
 ```
 
 
-# TODO
+## TODO
 
 - Only keep the last 10 master images (justification: we should be using the last images only, last 10 gives us something to rollback to if needed.)
 - Add some more documentation to this readme
 - Delete all untagged images
-- Make repo names configurable via env vars
 - Make tagging convention configurable

@@ -68,6 +68,7 @@ describe('cleanupImages', () => {
   const cleanup = proxyquire('./handler.js', mocks);
 
   beforeEach(() => {
+    process.env.DRY_RUN = 'true';
     process.env.REPO_NAMES = 'test-repo';
     process.env.AWS_ACCOUNT_ID = '1234567890';
 
@@ -75,6 +76,7 @@ describe('cleanupImages', () => {
   });
 
   it('Should not remove master images', done => {
+    process.env.DRY_RUN = 'false';
     deleteStub.returns(deletePromise);
     cleanup.cleanupImages(null, null, () => {
       assert(describeImagesStub.called);
@@ -89,68 +91,9 @@ describe('cleanupImages', () => {
 
   it('Should not call delete if dry run', done => {
     deleteStub.returns(deletePromise);
-    process.env.DRY_RUN = true;
     cleanup.cleanupImages(null, null, () => {
       assert(describeImagesStub.called);
       assert(deleteStub.notCalled);
-      done();
-    });
-  });
-
-  it('Should handle pagination using the nextToken', done => {
-
-    const stub = sandbox.stub();
-    stub.onCall(0).returns({
-      promise: () => Promise.resolve(
-        {
-          nextToken: 'next-please',
-          imageDetails: [{
-            registryId: '384553929753',
-            repositoryName: 'test-repo-1',
-            imageDigest: '4',
-            imageTags: ['1.0.0-other', 'dont-ignore-this'],
-            imageSizeInBytes: '1024',
-            imagePushedAt: moment().add(-31, 'days')
-          }]
-        })
-    });
-
-    stub.onCall(1).returns({
-      promise: () => Promise.resolve(
-        {
-          nextToken: null,
-          imageDetails: [{
-            registryId: '384553929754',
-            repositoryName: 'test-repo-2',
-            imageDigest: '4',
-            imageTags: ['1.0.0-other', 'dont-ignore-this'],
-            imageSizeInBytes: '1024',
-            imagePushedAt: moment().add(-31, 'days')
-          }]
-        })
-    });
-
-    const cleanupImagesProxy = proxyquire('./handler.js', {
-      'aws-sdk': {
-        ECR: function () { // eslint-disable-line
-          this.batchDeleteImage = deleteStub;
-          this.describeImages = stub;
-        }
-      }
-    });
-
-    process.env.DRY_RUN = false;
-
-    cleanupImagesProxy.cleanupImages(null, null, () => {
-      const secondCall = stub.getCall(1);
-
-      assert(secondCall.calledWithMatch({
-        registryId: '1234567890',
-        repositoryName: 'test-repo',
-        maxResults: 100,
-        nextToken: 'next-please'
-      }), 'describeImages was not called with the next token for the 2nd time');
-      assert(stub.callCount === 2, 'describeImages was not called 2 times');
       done();
     });
   });
