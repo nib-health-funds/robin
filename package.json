@@ -24,9 +24,8 @@
     "request-promise": "^4.1.1"
   },
   "devDependencies": {
-    "eslint": "^3.7.1",
-    "eslint-config-jameslnewell": "2.0.0-preview.1",
-    "mocha": "^3.2.0",
+    "eslint": "^v6.0.1",
+    "mocha": "^6.1.4",
     "proxyquire": "^1.7.11",
     "serverless": "^1.6.0",
     "sinon": "^1.17.7"
