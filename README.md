@@ -31,29 +31,35 @@ through all pages of images, we suggest you simply run the lambda multiple times
 
 1. Lint the function
 
-```
-$ npm run lint
-```
+    ```
+    $ npm run lint
+    ```
 
-5. Test the function
+1. Run Prettier
 
-```
-$ npm test
-```
+    ```
+    $ npm run prettier:check
+    ```
 
-6. Deploy the function
+1. Test the function
 
-```
-# Describe REPO_NAMES at deploy time
+    ```
+    $ npm test
+    ```
 
-$ REPO_NAMES="test_repo,test_repo_1,test_repo_2" AWS_ACCOUNT_ID=1234567890 npm run deploy
-```
+1. Deploy the function
 
-7. Tail cloudwatch logs
+    ```
+    # Describe REPO_NAMES at deploy time
 
-```
-$ npm run tail-logs
-```
+    $ REPO_NAMES="test_repo,test_repo_1,test_repo_2" AWS_ACCOUNT_ID=1234567890 npm run deploy
+    ```
+
+1. Tail cloudwatch logs
+
+    ```
+    $ npm run tail-logs
+    ```
 
 
 ## TODO

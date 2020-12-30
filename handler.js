@@ -273,8 +273,8 @@ module.exports.cleanupImages = (event, context, callback) => {
 
       return Promise.resolve(reportText);
     })
-    .then((text) =>
-      postToSlack(text) // Post results to Slack
+    .then(
+      (text) => postToSlack(text) // Post results to Slack
     )
     .then(() => {
       callback(null, { message: "robin executed successfully!", event });
