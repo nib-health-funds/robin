@@ -1,6 +1,6 @@
 {
   "name": "robin",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "batmans very capable side kick - deletes old ECR images",
   "main": "handler.js",
   "scripts": {
@@ -8,7 +8,8 @@
     "lint": "eslint *.js",
     "tail-logs": "node_modules/serverless/bin/serverless logs -f cleanupImages -t",
     "test": "mocha \"*.test.js\"",
-    "build": "npm run lint && npm test"
+    "prettier:write": "prettier --write *.js",
+    "prettier:check": "prettier --check *.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,7 @@
     "aws-sdk": "^2.9.0",
     "lodash.filter": "^4.6.0",
     "moment": "^2.16.0",
+    "prettier": "^2.2.1",
     "request": "^2.79.0",
     "request-promise": "^4.1.1"
   },
