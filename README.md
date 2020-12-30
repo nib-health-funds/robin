@@ -2,7 +2,7 @@
 
 Note that [ECR Lifecycle Policies](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html) may be a better fit for you use case.
 
-[![Build Status](https://travis-ci.org/nib-health-funds/robin.svg?branch=master)](https://travis-ci.org/nib-health-funds/robin)
+[![cicd](https://github.com/nib-health-funds/robin/workflows/ci/badge.svg?branch=master)](https://github.com/nib-health-funds/robin/actions?query=workflow%3Aci)
 [![Dependencies](https://david-dm.org/nib-health-funds/robin.svg)](https://david-dm.org/nib-health-funds/robin)
 
 Batman's very capable side kick - deletes old ECR images.

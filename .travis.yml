@@ -1,7 +1,0 @@
-language: node_js
-env:
-  - REPO_NAMES="test-repo"
-node_js:
-  - "10"
-install: npm install
-script: npm run build
