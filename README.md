@@ -16,7 +16,7 @@ Images stored in ECR incur monthly data storage charges, this means paying to st
 
 Per Lambda invocation:
 
-- 100 images that are older than 30 days and that do not have tags that contain 'master'
+- 100 images that are older than 30 days and that do not have tags that contain 'master' or 'main'
 
 If you need to delete more than 100 images, rather than complicating this script so that it can paginate
 through all pages of images, we suggest you simply run the lambda multiple times.
@@ -58,7 +58,7 @@ $ npm run tail-logs
 
 ## TODO
 
-- Only keep the last 10 master images (justification: we should be using the last images only, last 10 gives us something to rollback to if needed.)
+- Only keep the last 10 master/main images (justification: we should be using the last images only, last 10 gives us something to rollback to if needed.)
 - Add some more documentation to this readme
 - Delete all untagged images
 - Make tagging convention configurable
