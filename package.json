@@ -20,7 +20,7 @@
   "dependencies": {
     "aws-sdk": "^2.9.0",
     "lodash.filter": "^4.6.0",
-    "moment": "^2.16.0",
+    "moment": "^2.29.4",
     "prettier": "^2.2.1",
     "request": "^2.79.0",
     "request-promise": "^4.1.1"
