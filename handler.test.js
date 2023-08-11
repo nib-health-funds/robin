@@ -65,15 +65,14 @@ const desribeImagesPromise = {
     }),
 };
 
-const sandbox = sinon.sandbox.create();
+const sandbox = sinon.createSandbox();
 const deleteStub = sandbox.stub();
 const describeImagesStub = sandbox.stub().returns(desribeImagesPromise);
 const mocks = {
-  "aws-sdk": {
-    ECR: function () {
+  "@aws-sdk/client-ecr": {
+    ECRClient: function () {
       // eslint-disable-line
-      this.batchDeleteImage = deleteStub;
-      this.describeImages = describeImagesStub;
+      this.send = deleteStub;
     },
   },
 };
@@ -99,7 +98,7 @@ describe("cleanupImages", () => {
           registryId: "1234567890",
           repositoryName: "test-repo",
           imageIds: [{ imageDigest: "4" }],
-        })
+        }),
       );
       done();
     });
