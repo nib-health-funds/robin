@@ -29,9 +29,9 @@ async function getAllImages(ecr, registryId, repoName) {
     maxResults: 100,
   };
 
-  return await ecr
+  await ecr
     .send(new DescribeImagesCommand(params))
-    .then((data) => Promise.resolve(data.imageDetails));
+    .then((data) => {return data.imageDetails});
 }
 
 function buildReport(
@@ -145,7 +145,7 @@ module.exports.cleanupImages = (event, context, callback) => {
   const registry = process.env.AWS_ACCOUNT_ID;
 
   const ecrRegion = process.env.ECR_REGION || "us-east-1";
-  const ecr = new ECRClient({ apiVersion: "2015-09-21", region: ecrRegion });
+  const ecr = new ECRClient({ region: ecrRegion });
 
   const reposNotFound = [];
   const reposWithUntaggedImages = {};

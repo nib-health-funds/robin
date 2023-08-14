@@ -1,3 +1,4 @@
+const { BatchDeleteImageCommand, DescribeImagesCommand, ECRClient } = require("@aws-sdk/client-ecr");
 const assert = require("assert");
 const moment = require("moment");
 const proxyquire = require("proxyquire");
@@ -66,13 +67,19 @@ const desribeImagesPromise = {
 };
 
 const sandbox = sinon.createSandbox();
-const deleteStub = sandbox.stub();
+const deleteStub = sandbox.stub().returns(deletePromise);
 const describeImagesStub = sandbox.stub().returns(desribeImagesPromise);
 const mocks = {
   "@aws-sdk/client-ecr": {
     ECRClient: function () {
       // eslint-disable-line
-      this.send = deleteStub;
+      this.send = (cmd) => {
+        if (cmd instanceof BatchDeleteImageCommand) {
+          cmd = deleteStub
+        } else if (cmd instanceof DescribeImagesCommand) {
+          cmd = describeImagesStub
+        }
+      }
     },
   },
 };
