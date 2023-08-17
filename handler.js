@@ -29,9 +29,9 @@ async function getAllImages(ecr, registryId, repoName) {
     maxResults: 100,
   };
 
-  await ecr
+  const data = await ecr
     .send(new DescribeImagesCommand(params))
-    .then((data) => {return data.imageDetails});
+  return data.imageDetails
 }
 
 function buildReport(

@@ -1,122 +1,105 @@
 const { BatchDeleteImageCommand, DescribeImagesCommand, ECRClient } = require("@aws-sdk/client-ecr");
-const assert = require("assert");
 const moment = require("moment");
-const proxyquire = require("proxyquire");
-const sinon = require("sinon");
+const { mockClient } = require("aws-sdk-client-mock");
+const { cleanupImages } = require("./handler");
+const { expect } = require("expect");
+(globalThis).expect = expect;
+require('aws-sdk-client-mock-jest')
 
 const deletePromise = {
-  promise: () =>
-    Promise.resolve({
-      imageIds: [
-        {
-          imageDigest: "3797470f-bb69-11e6-90e4-19b39eb619f7",
-          imageTag: "some-tag",
-        },
-      ],
-      failures: [],
-    }),
-};
+  imageIds: [
+    {
+      imageDigest: "3797470f-bb69-11e6-90e4-19b39eb619f7",
+      imageTag: "some-tag",
+    },
+  ],
+  failures: [],
+}
 
 const desribeImagesPromise = {
-  promise: () =>
-    Promise.resolve({
-      nextToken: null,
-      imageDetails: [
-        {
-          registryId: "384553929753",
-          repositoryName: "test-repo",
-          imageDigest: "1",
-          imageTags: ["1.0.0-master", "ignore-this"],
-          imageSizeInBytes: "1024",
-          imagePushedAt: moment(),
-        },
-        {
-          registryId: "384553929753",
-          repositoryName: "test-repo",
-          imageDigest: "2",
-          imageTags: ["1.0.0-master", "ignore-this"],
-          imageSizeInBytes: "1024",
-          imagePushedAt: moment().add(-31, "days"),
-        },
-        {
-          registryId: "384553929753",
-          repositoryName: "test-repo",
-          imageDigest: "3",
-          imageTags: ["1.0.0-other", "ignore-this"],
-          imageSizeInBytes: "1024",
-          imagePushedAt: moment(),
-        },
-        {
-          registryId: "384553929753",
-          repositoryName: "test-repo",
-          imageDigest: "4",
-          imageTags: ["1.0.0-other", "dont-ignore-this"],
-          imageSizeInBytes: "1024",
-          imagePushedAt: moment().add(-31, "days"),
-        },
-        {
-          registryId: "384553929753",
-          repositoryName: "test-repo",
-          imageDigest: "5",
-          imageTags: ["1.0.0-main", "ignore-this"],
-          imageSizeInBytes: "1024",
-          imagePushedAt: moment().add(-31, "days"),
-        },
-      ],
-    }),
-};
-
-const sandbox = sinon.createSandbox();
-const deleteStub = sandbox.stub().returns(deletePromise);
-const describeImagesStub = sandbox.stub().returns(desribeImagesPromise);
-const mocks = {
-  "@aws-sdk/client-ecr": {
-    ECRClient: function () {
-      // eslint-disable-line
-      this.send = (cmd) => {
-        if (cmd instanceof BatchDeleteImageCommand) {
-          cmd = deleteStub
-        } else if (cmd instanceof DescribeImagesCommand) {
-          cmd = describeImagesStub
-        }
-      }
+  nextToken: null,
+  imageDetails: [
+    {
+      registryId: "384553929753",
+      repositoryName: "test-repo",
+      imageDigest: "1",
+      imageTags: ["1.0.0-master", "ignore-this"],
+      imageSizeInBytes: "1024",
+      imagePushedAt: moment(),
     },
-  },
-};
+    {
+      registryId: "384553929753",
+      repositoryName: "test-repo",
+      imageDigest: "2",
+      imageTags: ["1.0.0-master", "ignore-this"],
+      imageSizeInBytes: "1024",
+      imagePushedAt: moment().add(-31, "days"),
+    },
+    {
+      registryId: "384553929753",
+      repositoryName: "test-repo",
+      imageDigest: "3",
+      imageTags: ["1.0.0-other", "ignore-this"],
+      imageSizeInBytes: "1024",
+      imagePushedAt: moment(),
+    },
+    {
+      registryId: "384553929753",
+      repositoryName: "test-repo",
+      imageDigest: "4",
+      imageTags: ["1.0.0-other", "dont-ignore-this"],
+      imageSizeInBytes: "1024",
+      imagePushedAt: moment().add(-31, "days"),
+    },
+    {
+      registryId: "384553929753",
+      repositoryName: "test-repo",
+      imageDigest: "5",
+      imageTags: ["1.0.0-main", "ignore-this"],
+      imageSizeInBytes: "1024",
+      imagePushedAt: moment().add(-31, "days"),
+    },
+  ],
+}
+
+const ecrMock = mockClient(ECRClient);
+
+function callback() {}
 
 describe("cleanupImages", () => {
-  const cleanup = proxyquire("./handler.js", mocks);
 
   beforeEach(() => {
+    ecrMock.reset()
     process.env.DRY_RUN = "true";
     process.env.REPO_NAMES = "test-repo";
     process.env.AWS_ACCOUNT_ID = "1234567890";
-
-    sandbox.reset();
+    ecrMock
+      .on(DescribeImagesCommand).resolves(desribeImagesPromise)
+      .on(BatchDeleteImageCommand).resolves(deletePromise)
   });
 
-  it.only("Should not remove master images", (done) => {
+  it("Should not remove master images", async () => {
     process.env.DRY_RUN = "false";
-    deleteStub.returns(deletePromise);
-    cleanup.cleanupImages(null, null, () => {
-      assert(describeImagesStub.called);
-      assert(
-        deleteStub.calledWith({
-          registryId: "1234567890",
-          repositoryName: "test-repo",
-          imageIds: [{ imageDigest: "4" }],
-        }),
-      );
-      done();
-    });
+    
+    await cleanupImages(null, null, callback);
+
+    expect(ecrMock).toHaveReceivedCommand(DescribeImagesCommand)
+    expect(ecrMock).toHaveReceivedCommandWith(BatchDeleteImageCommand,{
+      registryId: "1234567890",
+      repositoryName: "test-repo",
+      imageIds: [{ imageDigest: "4" }],
+    })
   });
 
-  it("Should not call delete if dry run", (done) => {
-    deleteStub.returns(deletePromise);
-    cleanup.cleanupImages(null, null, () => {
-      assert(describeImagesStub.called);
-      assert(deleteStub.notCalled);
-      done();
-    });
+  it("Should not call delete if dry run", async () => {
+    await cleanupImages(null, null, callback);
+
+    expect(ecrMock).toHaveReceivedCommandWith(DescribeImagesCommand, {
+      "maxResults": 100, 
+      "registryId": "1234567890", 
+      "repositoryName": "test-repo"
+    })
+    expect(ecrMock).toHaveReceivedCommandTimes(BatchDeleteImageCommand, 0)
+    
   });
 });
