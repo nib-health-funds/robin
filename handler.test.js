@@ -1,10 +1,14 @@
-const { BatchDeleteImageCommand, DescribeImagesCommand, ECRClient } = require("@aws-sdk/client-ecr");
+const {
+  BatchDeleteImageCommand,
+  DescribeImagesCommand,
+  ECRClient,
+} = require("@aws-sdk/client-ecr");
 const moment = require("moment");
 const { mockClient } = require("aws-sdk-client-mock");
 const { cleanupImages } = require("./handler");
 const { expect } = require("expect");
-(globalThis).expect = expect;
-require('aws-sdk-client-mock-jest')
+globalThis.expect = expect;
+require("aws-sdk-client-mock-jest");
 
 const deletePromise = {
   imageIds: [
@@ -14,7 +18,7 @@ const deletePromise = {
     },
   ],
   failures: [],
-}
+};
 
 const desribeImagesPromise = {
   nextToken: null,
@@ -60,46 +64,46 @@ const desribeImagesPromise = {
       imagePushedAt: moment().add(-31, "days"),
     },
   ],
-}
+};
 
 const ecrMock = mockClient(ECRClient);
 
 function callback() {}
 
 describe("cleanupImages", () => {
-
   beforeEach(() => {
-    ecrMock.reset()
+    ecrMock.reset();
     process.env.DRY_RUN = "true";
     process.env.REPO_NAMES = "test-repo";
     process.env.AWS_ACCOUNT_ID = "1234567890";
     ecrMock
-      .on(DescribeImagesCommand).resolves(desribeImagesPromise)
-      .on(BatchDeleteImageCommand).resolves(deletePromise)
+      .on(DescribeImagesCommand)
+      .resolves(desribeImagesPromise)
+      .on(BatchDeleteImageCommand)
+      .resolves(deletePromise);
   });
 
   it("Should not remove master images", async () => {
     process.env.DRY_RUN = "false";
-    
+
     await cleanupImages(null, null, callback);
 
-    expect(ecrMock).toHaveReceivedCommand(DescribeImagesCommand)
-    expect(ecrMock).toHaveReceivedCommandWith(BatchDeleteImageCommand,{
+    expect(ecrMock).toHaveReceivedCommand(DescribeImagesCommand);
+    expect(ecrMock).toHaveReceivedCommandWith(BatchDeleteImageCommand, {
       registryId: "1234567890",
       repositoryName: "test-repo",
       imageIds: [{ imageDigest: "4" }],
-    })
+    });
   });
 
   it("Should not call delete if dry run", async () => {
     await cleanupImages(null, null, callback);
 
     expect(ecrMock).toHaveReceivedCommandWith(DescribeImagesCommand, {
-      "maxResults": 100, 
-      "registryId": "1234567890", 
-      "repositoryName": "test-repo"
-    })
-    expect(ecrMock).toHaveReceivedCommandTimes(BatchDeleteImageCommand, 0)
-    
+      maxResults: 100,
+      registryId: "1234567890",
+      repositoryName: "test-repo",
+    });
+    expect(ecrMock).toHaveReceivedCommandTimes(BatchDeleteImageCommand, 0);
   });
 });
