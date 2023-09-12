@@ -7,6 +7,13 @@ provider:
   runtime: nodejs18.x
   stage: "${env:STAGE}"
   region: ap-southeast-2
+  stackTags:
+    Name: "${env:APPLICATION}-${env:SLICE}"
+    Application: "${env:APPLICATION}"
+    LineOfBusiness: "${env:LINE_OF_BUSINESS}"
+    Stage: "${env:STAGE}"
+    Slice: "${env:SLICE}"
+    Zone: "${env:ZONE}"
   iamRoleStatements:
     - Effect: "Allow"
       Action:
