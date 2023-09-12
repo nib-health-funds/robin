@@ -24,7 +24,7 @@ function postToSlack(text) {
 
 async function getAllImages(ecr, registryId, repoName) {
   const params = {
-    registryId,
+    registryId: registryId,
     repositoryName: repoName,
     maxResults: 100,
   };
