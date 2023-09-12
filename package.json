@@ -31,6 +31,6 @@
     "eslint": "^8.46.0",
     "expect": "^29.6.2",
     "mocha": "^10.2.0",
-    "serverless": "^3.34.0"
+    "serverless": "^2.72.4"
   }
 }

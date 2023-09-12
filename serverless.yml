@@ -7,22 +7,21 @@ provider:
   runtime: nodejs18.x
   stage: dev
   region: ap-southeast-2
-
   iamRoleStatements:
     - Effect: "Allow"
       Action:
         - "ecr:*"
       Resource: "*"
+  environment:
+  REPO_NAMES: ${env:REPO_NAMES}
+  AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
+  DRY_RUN: ${env:DRY_RUN, 'true'}
+  ECR_REGION: ${env:ECR_REGION, 'us-east-1'}
+  SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
 
 functions:
   cleanupImages:
     handler: handler.cleanupImages
-    environment:
-      REPO_NAMES: ${env:REPO_NAMES}
-      AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
-      DRY_RUN: ${env:DRY_RUN, 'true'}
-      ECR_REGION: ${env:ECR_REGION, 'us-east-1'}
-      SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
     timeout: 45
     events:
       - schedule: rate(1 day)
