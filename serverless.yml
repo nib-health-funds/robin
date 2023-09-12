@@ -9,7 +9,6 @@ provider:
   region: ap-southeast-2
   stackTags:
     Name: "${env:APPLICATION}-${env:SLICE}"
-    Application: "${env:APPLICATION}"
     LineOfBusiness: "${env:LINE_OF_BUSINESS}"
     Stage: "${env:STAGE}"
     Slice: "${env:SLICE}"
