@@ -143,7 +143,7 @@ module.exports.cleanupImages = (event, context, callback) => {
   const repoNames = process.env.REPO_NAMES.split(",");
   const registry = process.env.AWS_ACCOUNT_ID;
 
-  const ecrRegion = process.env.ECR_REGION || "us-east-1";
+  const ecrRegion = process.env.ECR_REGION || "ap-southeast-2";
   const ecr = new ECRClient({ region: ecrRegion });
 
   const reposNotFound = [];

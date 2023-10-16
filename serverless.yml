@@ -27,7 +27,7 @@ functions:
       REPO_NAMES: ${env:REPO_NAMES}
       AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
       DRY_RUN: ${env:DRY_RUN, 'true'}
-      ECR_REGION: ${env:RQP_REGION, 'us-east-1'}
+      ECR_REGION: ${env:RQP_REGION}
       SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
     timeout: 45
     events:
