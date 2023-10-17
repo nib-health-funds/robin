@@ -18,18 +18,19 @@
   "author": "will falconer",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.9.0",
+    "@aws-sdk/client-ecr": "^3.388.0",
     "lodash.filter": "^4.6.0",
-    "moment": "^2.16.0",
-    "prettier": "^2.2.1",
+    "moment": "^2.29.4",
+    "prettier": "^3.0.1",
     "request": "^2.79.0",
     "request-promise": "^4.1.1"
   },
   "devDependencies": {
-    "eslint": "^v6.0.1",
-    "mocha": "^6.1.4",
-    "proxyquire": "^1.7.11",
-    "serverless": "^1.6.0",
-    "sinon": "^1.17.7"
+    "aws-sdk-client-mock": "^3.0.0",
+    "aws-sdk-client-mock-jest": "^3.0.0",
+    "eslint": "^8.46.0",
+    "expect": "^29.6.2",
+    "mocha": "^10.2.0",
+    "serverless": "^2.72.4"
   }
 }

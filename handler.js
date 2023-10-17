@@ -1,6 +1,9 @@
 "use strict";
-
-const AWS = require("aws-sdk");
+const {
+  ECRClient,
+  DescribeImagesCommand,
+  BatchDeleteImageCommand,
+} = require("@aws-sdk/client-ecr");
 const moment = require("moment");
 const filter = require("lodash.filter");
 const rp = require("request-promise");
@@ -19,17 +22,15 @@ function postToSlack(text) {
   return rp(options);
 }
 
-function getAllImages(ecr, registryId, repoName) {
+async function getAllImages(ecr, registryId, repoName) {
   const params = {
-    registryId,
+    registryId: registryId,
     repositoryName: repoName,
     maxResults: 100,
   };
 
-  return ecr
-    .describeImages(params)
-    .promise()
-    .then((data) => Promise.resolve(data.imageDetails));
+  const data = await ecr.send(new DescribeImagesCommand(params));
+  return data.imageDetails;
 }
 
 function buildReport(
@@ -38,13 +39,13 @@ function buildReport(
   reposWithUntaggedImages,
   reposWithDeletedImagesDryRun,
   reposWithDeletedImages,
-  reposWithImagesThatFailedToDelete
+  reposWithImagesThatFailedToDelete,
 ) {
   const untaggedRepoKeys = Object.keys(reposWithUntaggedImages);
   const deletedDryRunRepoKeys = Object.keys(reposWithDeletedImagesDryRun);
   const deletedRepoKeys = Object.keys(reposWithDeletedImages);
   const failedToDeletedRepoKeys = Object.keys(
-    reposWithImagesThatFailedToDelete
+    reposWithImagesThatFailedToDelete,
   );
 
   if (
@@ -129,21 +130,21 @@ function buildReport(
 module.exports.cleanupImages = (event, context, callback) => {
   if (typeof process.env.REPO_NAMES === "undefined") {
     throw new Error(
-      "Can't start lambda: missing REPO_NAMES environment variable"
+      "Can't start lambda: missing REPO_NAMES environment variable",
     );
   }
 
   if (typeof process.env.AWS_ACCOUNT_ID === "undefined") {
     throw new Error(
-      "Can't start lambda: missing AWS_ACCOUNT_ID environment variable"
+      "Can't start lambda: missing AWS_ACCOUNT_ID environment variable",
     );
   }
 
   const repoNames = process.env.REPO_NAMES.split(",");
   const registry = process.env.AWS_ACCOUNT_ID;
 
-  const ecrRegion = process.env.ECR_REGION || "us-east-1";
-  const ecr = new AWS.ECR({ apiVersion: "2015-09-21", region: ecrRegion });
+  const ecrRegion = process.env.ECR_REGION || "ap-southeast-2";
+  const ecr = new ECRClient({ region: ecrRegion });
 
   const reposNotFound = [];
   const reposWithUntaggedImages = {};
@@ -181,12 +182,12 @@ module.exports.cleanupImages = (event, context, callback) => {
             !isUntagged &&
             moment(image.imagePushedAt).isBefore(cutOffDate) &&
             !image.imageTags.find(
-              (tag) => tag.indexOf("master") > -1 || tag.indexOf("main") > -1
+              (tag) => tag.indexOf("master") > -1 || tag.indexOf("main") > -1,
             )
           );
         });
       })
-      .then((toDelete) => {
+      .then(async (toDelete) => {
         if (!toDelete || toDelete.length === 0) {
           return Promise.resolve({ imageIds: "none", failures: "none" });
         }
@@ -218,14 +219,13 @@ module.exports.cleanupImages = (event, context, callback) => {
           imageIds: convertedToDelete,
         };
 
-        return ecr
-          .batchDeleteImage(deleteParams)
-          .promise()
-          .then(({ failures, imageIds }) => {
-            console.log("failures: ", failures);
-            console.log("imageIds: ", imageIds);
+        return await ecr
+          .send(new BatchDeleteImageCommand(deleteParams))
+          .then((response) => {
+            console.log("failures: ", response.failures);
+            console.log("imageIds: ", response.imageIds);
 
-            failures.forEach(({ imageId }) => {
+            response.failures.forEach(({ imageId }) => {
               if (
                 typeof reposWithImagesThatFailedToDelete[repoName] ===
                 "undefined"
@@ -233,11 +233,11 @@ module.exports.cleanupImages = (event, context, callback) => {
                 reposWithImagesThatFailedToDelete[repoName] = [];
               }
               reposWithImagesThatFailedToDelete[repoName].push(
-                imageId.imageTag
+                imageId.imageTag,
               );
             });
 
-            imageIds.forEach(({ imageTag }) => {
+            response.imageIds.forEach(({ imageTag }) => {
               if (typeof reposWithDeletedImages[repoName] === "undefined") {
                 reposWithDeletedImages[repoName] = [];
               }
@@ -254,7 +254,7 @@ module.exports.cleanupImages = (event, context, callback) => {
         }
 
         console.log(err);
-      })
+      }),
   );
 
   return Promise.all(promises)
@@ -265,7 +265,7 @@ module.exports.cleanupImages = (event, context, callback) => {
         reposWithUntaggedImages,
         reposWithDeletedImagesDryRun,
         reposWithDeletedImages,
-        reposWithImagesThatFailedToDelete
+        reposWithImagesThatFailedToDelete,
       );
 
       // Log Results
@@ -274,7 +274,7 @@ module.exports.cleanupImages = (event, context, callback) => {
       return Promise.resolve(reportText);
     })
     .then(
-      (text) => postToSlack(text) // Post results to Slack
+      (text) => postToSlack(text), // Post results to Slack
     )
     .then(() => {
       callback(null, { message: "robin executed successfully!", event });
